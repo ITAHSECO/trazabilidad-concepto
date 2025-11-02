@@ -21,13 +21,16 @@ class TrazabilityApp {
         this.inventarioTable = new Tabulator("#inventario-table", {
             ajaxURL: "/api/inventario",
             layout: "fitColumns",
-            height: "400px",
+            height: "250px",
             columns: [
                 // **AJUSTA ESTOS CAMPOS (field) A TUS COLUMNAS DE SQL**
-                { title: "Lote", field: "SerieLote", width: 100, headerFilter: true },
+                { title: "Almacen", field: "ALMACEN", width: 150},
+                { title: "Fabricante", field: "FABRICANTE", width: 150},
+                { title: "Lote", field: "SERIE/LOTE", width: 100, headerFilter: true },
                 { title: "Código", field: "CODIGO", width: 100, headerFilter: true },
-                { title: "Artículo", field: "Descripcion" },
-                { title: "Stock", field: "StockActual", hozAlign: "center" },
+                { title: "Artículo", field: "DESCRIPCION" },
+                { title: "Stock", field: "DISPONIBLE", hozAlign: "center" },
+                { title: "Vencimiento", field: "VCTO", hozAlign: "center" }
             ],
             rowClick: (e, row) => this._handleInventarioSelection(row.getData()),
         });
@@ -40,9 +43,9 @@ class TrazabilityApp {
             height: "200px",
             columns: [
                 // **AJUSTA ESTOS CAMPOS (field)**
-                { title: "Movimiento", field: "TIPO_MOVIMIENTO" },
-                { title: "Fecha", field: "FECHA", hozAlign: "center" },
-                { title: "N° Liquidación", field: "NUM_LIQUIDACION", hozAlign: "center" }, // CRÍTICO
+                { title: "TIPO", field: "TIPO_DOC_COD" },
+                { title: "Fecha", field: "FECHA_MOVIMIENTO", hozAlign: "center" },
+                { title: "Num. Liq.", field: "NUM_LIQUIDACION", hozAlign: "center" }, // CRÍTICO
                 { title: "N° Documento", field: "NUM_DOCUMENTO" },
             ],
             rowClick: (e, row) => this._handleMovimientoSelection(row.getData()),
