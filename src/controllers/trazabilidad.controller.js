@@ -5,8 +5,21 @@ const controller = {};
 // SP 1: Inventario (dbo.TRZ_p1) - Tabla Maestra
 controller.getInventario = async (req, res) => {
     try {
-        console.log('[API] Solicitud: /api/inventario');
-        const inventario = await dbService.executeSp('dbo.TRZ_p1'); 
+        console.log('[API] Solicitud: /api/inventario con filtros:', req.query);
+        
+        // Extraemos TODOS los parámetros del Query String (enviados por el formulario)
+        const params = req.query; 
+
+        // Ejecutamos el SP TRZ_p1 con todos los parámetros recibidos.
+        const inventario = await dbService.executeSp('dbo.TRZ_p1', {
+            AlmacenNombre: params.AlmacenNombre || null,
+            FabricanteNombre: params.FabricanteNombre || null,
+            CodigoArticulo: params.CodigoArticulo || null,
+            Descripcion: params.Descripcion || null,
+            SerieLote: params.SerieLote || null,
+            // Convertimos a INT si existe, si no, es NULL (necesario para la definición del SP)
+            StockDisponible: params.StockDisponible ? parseInt(params.StockDisponible) : null 
+        }); 
         res.json(inventario);
     } catch (error) {
         console.error('[API] Error en getInventario:', error);
@@ -14,62 +27,17 @@ controller.getInventario = async (req, res) => {
     }
 };
 
-// SP 2: Movimientos (dbo.TRZ_movimientoDetalle) - Usa SerieLote y CODIGO
+// 🚨 Dejamos las otras funciones vacías/con error temporalmente, ya que solo implementamos T1
 controller.getMovimiento = async (req, res) => {
-    const { serieLote, codigo } = req.query; 
-
-    if (!serieLote || !codigo) {
-        return res.status(400).json({ error: 'Faltan parámetros SerieLote o CODIGO para movimientos.' });
-    }
-
-    try {
-        console.log(`[API] Solicitud: /api/movimiento. Lote: ${serieLote}, Código: ${codigo}`);
-        const movimientos = await dbService.executeSp('dbo.TRZ_movimientoDetalle', {
-            SerieLote: serieLote, 
-            CODIGO: codigo
-        });
-        res.json(movimientos);
-    } catch (error) {
-        console.error('[API] Error en getMovimiento:', error);
-        res.status(500).json({ error: `Fallo al obtener movimientos (TRZ_movimientoDetalle).` });
-    }
+    res.status(501).json({ error: 'Tabla 2 (Movimiento) no implementada en este paso.' });
 };
 
-// SP 3: Liquidación (dbo.TRZ_liquidacionDetalle) - Usa NUM_LIQUIDACION
 controller.getLiquidacion = async (req, res) => {
-    const { numLiquidacion } = req.params; 
-
-    try {
-        console.log(`[API] Solicitud: /api/liquidacion. N° Liquidación: ${numLiquidacion}`);
-        const liquidacion = await dbService.executeSp('dbo.TRZ_liquidacionDetalle', {
-            NUM_LIQUIDACION: numLiquidacion 
-        });
-        res.json(liquidacion);
-    } catch (error) {
-        console.error('[API] Error en getLiquidacion:', error);
-        res.status(500).json({ error: `Fallo al obtener liquidación (TRZ_liquidacionDetalle).` });
-    }
+    res.status(501).json({ error: 'Tabla 3 (Liquidación) no implementada en este paso.' });
 };
 
-// SP 4: Ventas (dbo.TRZ_ventaDetalle) - Usa SerieLote y CODIGO
 controller.getVentas = async (req, res) => {
-    const { serieLote, codigo } = req.query; 
-
-    if (!serieLote || !codigo) {
-        return res.status(400).json({ error: 'Faltan parámetros SerieLote o CODIGO para ventas.' });
-    }
-    
-    try {
-        console.log(`[API] Solicitud: /api/ventas. Lote: ${serieLote}, Código: ${codigo}`);
-        const ventas = await dbService.executeSp('dbo.TRZ_ventaDetalle', {
-            SerieLote: serieLote, 
-            CODIGO: codigo
-        });
-        res.json(ventas);
-    } catch (error) {
-        console.error('[API] Error en getVentas:', error);
-        res.status(500).json({ error: `Fallo al obtener ventas (TRZ_ventaDetalle).` });
-    }
+    res.status(501).json({ error: 'Tabla 4 (Ventas) no implementada en este paso.' });
 };
 
 module.exports = controller;

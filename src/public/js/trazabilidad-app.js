@@ -3,153 +3,131 @@
 class TrazabilityApp {
     constructor() {
         this.inventarioTable = null;
-        this.movimientoTable = null;
-        this.liquidacionTable = null;
-        this.ventasTable = null;
+        this.selectedRowData = null; // Almacena la fila seleccionada
+        this.selectionModalElement = null; // Referencia al elemento DOM del modal
     }
 
     initialize() {
+        this.selectionModalElement = document.getElementById('selectionModal');
         this._initInventarioTable();
-        this._initMovimientoTable();
-        this._initLiquidacionTable();
-        this._initVentasTable();
+        this._setupFormHandlers();
+        
+        // Carga inicial de la tabla (sin filtros al inicio)
+        this._loadInventario(); 
     }
 
-    // --- Inicialización de Tablas ---
+    // --- Inicialización de Tabla 1 (Tabulator) ---
 
     _initInventarioTable() {
         this.inventarioTable = new Tabulator("#inventario-table", {
-            ajaxURL: "/api/inventario",
             layout: "fitColumns",
-            height: "250px",
+            height: "400px",
+            data: [], 
             columns: [
-                // **AJUSTA ESTOS CAMPOS (field) A TUS COLUMNAS DE SQL**
-                { title: "Almacen", field: "ALMACEN", width: 150},
-                { title: "Fabricante", field: "FABRICANTE", width: 150},
-                { title: "Lote", field: "SERIE/LOTE", width: 100, headerFilter: true },
-                { title: "Código", field: "CODIGO", width: 100, headerFilter: true },
+                { title: "Lote/Serie", field: "SERIE/LOTE", width: 120, headerFilter: false }, 
+                { title: "Código", field: "CODIGO", width: 100, headerFilter: false },
                 { title: "Artículo", field: "DESCRIPCION" },
-                { title: "Stock", field: "DISPONIBLE", hozAlign: "center" },
-                { title: "Vencimiento", field: "VCTO", hozAlign: "center" }
+                { title: "Fabricante", field: "FABRICANTE", width: 120 },
+                { title: "Stock", field: "DISPONIBLE", hozAlign: "center", width: 80 },
+                { title: "Vencimiento", field: "VCTO", hozAlign: "center", width: 100 },
+                { title: "Almacén", field: "ALMACEN" },
             ],
+            // Evento rowClick para mostrar el pop-up
             rowClick: (e, row) => this._handleInventarioSelection(row.getData()),
         });
     }
 
-    _initMovimientoTable() {
-        this.movimientoTable = new Tabulator("#movimiento-table", {
-            data: [], // Vacía inicialmente
-            layout: "fitColumns",
-            height: "200px",
-            columns: [
-                // **AJUSTA ESTOS CAMPOS (field)**
-                { title: "TIPO", field: "TIPO_DOC_COD" },
-                { title: "Fecha", field: "FECHA_MOVIMIENTO", hozAlign: "center" },
-                { title: "Num. Liq.", field: "NUM_LIQUIDACION", hozAlign: "center" }, // CRÍTICO
-                { title: "N° Documento", field: "NUM_DOCUMENTO" },
-            ],
-            rowClick: (e, row) => this._handleMovimientoSelection(row.getData()),
-        });
-    }
+    // --- Manejo de Eventos del Formulario y Modal ---
 
-    _initLiquidacionTable() {
-        this.liquidacionTable = new Tabulator("#liquidacion-table", {
-            data: [], // Vacía inicialmente
-            layout: "fitColumns",
-            height: "200px",
-            columns: [
-                // **AJUSTA ESTOS CAMPOS (field)**
-                { title: "Documento", field: "TIPO_DOC" },
-                { title: "Costo Total", field: "COSTO_TOTAL", formatter: "money" },
-                { title: "Proveedor", field: "PROVEEDOR" },
-            ],
-        });
-    }
-
-    _initVentasTable() {
-        this.ventasTable = new Tabulator("#ventas-table", {
-            data: [], // Vacía inicialmente
-            layout: "fitColumns",
-            height: "200px",
-            columns: [
-                // **AJUSTA ESTOS CAMPOS (field)**
-                { title: "N° Venta", field: "NUM_VENTA", width: 100 },
-                { title: "Cliente", field: "CLIENTE" },
-                { title: "Cantidad", field: "CANTIDAD", hozAlign: "center" },
-                { title: "Fecha Venta", field: "FECHA_VENTA", hozAlign: "center" },
-            ],
-        });
-    }
-
-    // --- Manejo de Eventos de Selección (Flujo de Trazabilidad) ---
-
-    /**
-     * T1 (Inventario) Seleccionado: Dispara T2 (Movimientos) y T4 (Ventas).
-     */
-    async _handleInventarioSelection(inventarioData) {
-        const serieLote = inventarioData.SerieLote;
-        const codigo = inventarioData.CODIGO;
-
-        if (!serieLote || !codigo) {
-            console.error("[T1] Datos incompletos en la fila seleccionada.");
-            return;
-        }
-
-        console.log(`[T1] Rastreando: Lote=${serieLote}, Código=${codigo}`);
-        document.getElementById('trazado-id-title').innerText = `${serieLote} / ${codigo}`;
+    _setupFormHandlers() {
+        const form = document.getElementById('search-form');
+        const clearButton = document.getElementById('clear-filters');
         
-        // 1. Limpiar T3 y T4
-        this.movimientoTable.clearData();
-        this.liquidacionTable.clearData();
-        this.ventasTable.clearData();
-        document.getElementById('liquidacion-id-title').innerText = 'N/A';
+        // 1. Manejo del Submit del Formulario
+        form.addEventListener('submit', (e) => {
+            // CRÍTICO: Previene el refresco de la página al enviar el formulario
+            e.preventDefault(); 
+            this._loadInventario();
+        });
 
-        // 2. Cargar T2 (Movimientos)
-        const urlMov = `/api/movimiento?serieLote=${serieLote}&codigo=${codigo}`;
-        this._loadTable(this.movimientoTable, urlMov, 'Movimientos (T2)');
+        // 2. Manejo del Botón Limpiar
+        clearButton.addEventListener('click', () => {
+            form.reset();
+            this._loadInventario(); 
+        });
 
-        // 3. Cargar T4 (Ventas) - Flujo paralelo
-        const urlVentas = `/api/ventas?serieLote=${serieLote}&codigo=${codigo}`;
-        this._loadTable(this.ventasTable, urlVentas, 'Ventas (T4)');
+        // 3. Manejo del Botón de Confirmación en el Modal
+        document.getElementById('confirm-selection').addEventListener('click', () => {
+            // Oculta el modal de la forma más sencilla: usando los atributos data-bs-*
+            // Pero si usamos la API JS, lo cerramos con JS:
+            const modalInstance = bootstrap.Modal.getInstance(this.selectionModalElement);
+            if (modalInstance) {
+                modalInstance.hide();
+            }
+            
+            console.log("Rastreo iniciado para:", this.selectedRowData["SERIE/LOTE"], this.selectedRowData.CODIGO);
+            alert(`Rastreo iniciado para Serie/Lote: ${this.selectedRowData["SERIE/LOTE"]} y Código: ${this.selectedRowData.CODIGO}. (Implementación de T2/T4 pendiente)`);
+        });
     }
 
-    /**
-     * T2 (Movimientos) Seleccionado: Dispara T3 (Liquidación) usando NUM_LIQUIDACION.
-     */
-    async _handleMovimientoSelection(movimientoData) {
-        const numLiquidacion = movimientoData.NUM_LIQUIDACION;
+    // --- Lógica de Consulta (Fetch) ---
 
-        if (!numLiquidacion) {
-            console.warn("[T2] Fila seleccionada no contiene NUM_LIQUIDACION. Limpiando T3.");
-            this.liquidacionTable.clearData();
-            document.getElementById('liquidacion-id-title').innerText = 'N/A';
-            return;
-        }
+    async _loadInventario() {
+        const form = document.getElementById('search-form');
+        const searchParams = new URLSearchParams(new FormData(form));
 
-        console.log(`[T2] Rastreando Liquidación N°: ${numLiquidacion}`);
-        document.getElementById('liquidacion-id-title').innerText = numLiquidacion;
-        
-        // 1. Cargar T3 (Liquidación)
-        const urlLiq = `/api/liquidacion/${numLiquidacion}`;
-        this._loadTable(this.liquidacionTable, urlLiq, 'Liquidación (T3)');
-    }
+        const url = `/api/inventario?${searchParams.toString()}`;
+        console.log(`[FETCH T1] Consultando: ${url}`);
 
-    /**
-     * Función genérica para cargar datos en una tabla.
-     */
-    async _loadTable(tableInstance, url, tableDescription) {
         try {
+            // Pequeño indicador visual de carga (opcional)
+            this.inventarioTable.setData([{id:0, CODIGO:"Cargando...", DESCRIPCION:"Consultando datos, por favor espere..."}]);
+            
             const response = await fetch(url);
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             const data = await response.json();
-            tableInstance.setData(data);
-            console.log(`[FETCH] ✅ Datos cargados en ${tableDescription}. Registros: ${data.length}`);
+            
+            this.inventarioTable.setData(data);
+            console.log(`[FETCH T1] ✅ Datos cargados. Registros: ${data.length}`);
         } catch (error) {
-            console.error(`[FETCH] ❌ Error al cargar ${tableDescription}:`, error);
-            tableInstance.clearData();
+            console.error(`[FETCH T1] ❌ Error al cargar Inventario:`, error);
+            this.inventarioTable.clearData();
+            // Mostrar mensaje de error dentro de la tabla si falla
+            this.inventarioTable.setData([{id:0, CODIGO:"ERROR", DESCRIPCION:`Fallo al cargar datos: ${error.message}`}]);
+        }
+    }
+
+    // --- Lógica de Interacción con Fila (Pop-up/Modal) ---
+
+    _handleInventarioSelection(rowData) {
+        this.selectedRowData = rowData; 
+        
+        // Extracción de datos con manejo de null/undefined
+        const serieLote = rowData && rowData["SERIE/LOTE"] ? rowData["SERIE/LOTE"] : 'N/A';
+        const codigo = rowData && rowData.CODIGO ? rowData.CODIGO : 'N/A';
+
+        // 1. Llenar el Modal
+        document.getElementById('modal-serie-lote').innerText = serieLote;
+        document.getElementById('modal-codigo').innerText = codigo;
+
+        // 2. Mostrar el Modal: Usamos la API de Bootstrap para inicializar y mostrar
+        // Esto es lo que fallaba: debemos asegurarnos de que 'bootstrap' exista.
+        if (typeof bootstrap !== 'undefined' && this.selectionModalElement) {
+            // Creamos o obtenemos la instancia para poder llamar a .show()
+            const myModal = new bootstrap.Modal(this.selectionModalElement);
+            myModal.show();
+        } else {
+            console.error("Bootstrap JS no cargado o elemento modal no encontrado. Imposible mostrar el popup.");
         }
     }
 }
+
+// Inicializar la aplicación cuando el DOM esté completamente cargado
+document.addEventListener('DOMContentLoaded', () => {
+    const app = new TrazabilityApp();
+    app.initialize();
+});
+
 
 // Inicializar la aplicación cuando el DOM esté completamente cargado
 document.addEventListener('DOMContentLoaded', () => {

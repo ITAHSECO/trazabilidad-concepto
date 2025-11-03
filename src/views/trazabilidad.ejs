@@ -1,62 +1,84 @@
 <div class="row mb-4">
     <div class="col-12">
         <h1 class="text-center">🔍 Concepto de Trazabilidad de Inventario (TRZ)</h1>
-        <p class="lead text-center">Selecciona una **fila de inventario** (Tabla 1) para disparar la consulta de **Movimientos** (Tabla 2) y **Ventas** (Tabla 4). Selecciona un **Movimiento** (Tabla 2) para ver su **Liquidación** (Tabla 3).</p>
+        <p class="lead text-center">Implementación Paso 1: Formulario de Búsqueda y Selección de Inventario.</p>
+    </div>
+</div>
+
+<div class="card shadow mb-4">
+    <div class="card-header bg-secondary text-white">
+        <h5 class="mb-0">Filtros de Búsqueda (TRZ_p1)</h5>
+    </div>
+    <div class="card-body">
+        <form id="search-form" class="row g-3">
+            <div class="col-md-3">
+                <label for="almacen" class="form-label">Almacén</label>
+                <input type="text" class="form-control" id="almacen" name="AlmacenNombre">
+            </div>
+            <div class="col-md-3">
+                <label for="fabricante" class="form-label">Fabricante</label>
+                <input type="text" class="form-control" id="fabricante" name="FabricanteNombre">
+            </div>
+            <div class="col-md-3">
+                <label for="codigo" class="form-label">Código Artículo</label>
+                <input type="text" class="form-control" id="codigo" name="CodigoArticulo">
+            </div>
+            <div class="col-md-3">
+                <label for="serie" class="form-label">Serie/Lote</label>
+                <input type="text" class="form-control" id="serie" name="SerieLote">
+            </div>
+            <div class="col-md-4">
+                <label for="descripcion" class="form-label">Descripción</label>
+                <input type="text" class="form-control" id="descripcion" name="Descripcion">
+            </div>
+            <div class="col-md-2">
+                <label for="stock" class="form-label">Stock Disp.</label>
+                <input type="number" class="form-control" id="stock" name="StockDisponible">
+            </div>
+            <div class="col-md-6 d-flex align-items-end justify-content-end">
+                <button type="submit" class="btn btn-primary me-2">Buscar Inventario</button>
+                <button type="button" class="btn btn-secondary" id="clear-filters">Limpiar</button>
+            </div>
+        </form>
     </div>
 </div>
 
 <div class="row">
-    <div class="col-md-12 mb-4">
+    <div class="col-12 mb-4">
         <div class="card shadow">
             <div class="card-header bg-primary text-white">
                 <h5 class="mb-0">Tabla 1: Inventario/Stock (dbo.TRZ_p1)</h5>
-                <small>Selecciona una fila para rastrear.</small>
+                <small>Haga click en una fila para iniciar el rastreo.</small>
             </div>
             <div class="card-body">
                 <div id="inventario-table"></div>
             </div>
         </div>
     </div>
-
-</div>
-<div class="row">
-        
-    <div class="col-md-12">
-        <div class="row">
-            <div class="col-12 mb-4">
-                <div class="card shadow">
-                    <div class="card-header bg-success text-white">
-                        <h5 class="mb-0">Tabla 2: Movimientos (dbo.TRZ_movimientoDetalle)</h5>
-                        <small>ID Trazado: <span id="trazado-id-title" class="badge bg-light text-dark">N/A</span></small>
-                    </div>
-                    <div class="card-body">
-                        <div id="movimiento-table"></div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-md-6 mb-4">
-                <div class="card shadow">
-                    <div class="card-header bg-warning text-dark">
-                        <h5 class="mb-0">Tabla 3: Liquidación (dbo.TRZ_liquidacionDetalle)</h5>
-                        <small>Liquidación N°: <span id="liquidacion-id-title" class="badge bg-dark text-white">N/A</span></small>
-                    </div>
-                    <div class="card-body">
-                        <div id="liquidacion-table"></div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-md-6 mb-4">
-                <div class="card shadow">
-                    <div class="card-header bg-danger text-white">
-                        <h5 class="mb-0">Tabla 4: Ventas (dbo.TRZ_ventaDetalle)</h5>
-                    </div>
-                    <div class="card-body">
-                        <div id="ventas-table"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
+    
+    <div id="other-tables-container" style="display:none;">
+        <div id="movimiento-table"></div>
+        <div id="liquidacion-table"></div>
+        <div id="ventas-table"></div>
     </div>
+</div>
+
+<div class="modal fade" id="selectionModal" tabindex="-1" aria-labelledby="selectionModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-info text-white">
+        <h5 class="modal-title" id="selectionModalLabel">Selección de Rastreo</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>Ha seleccionado el siguiente artículo para iniciar la trazabilidad:</p>
+        <strong>Serie/Lote:</strong> <span id="modal-serie-lote"></span><br>
+        <strong>Código:</strong> <span id="modal-codigo"></span>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+        <button type="button" class="btn btn-success" id="confirm-selection">Iniciar Rastreo (T2/T4)</button>
+      </div>
+    </div>
+  </div>
 </div>
