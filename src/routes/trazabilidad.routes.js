@@ -12,7 +12,7 @@ router.get('/', (req, res) => {
 // Rutas API para consultas a SPs
 router.get('/api/inventario', controller.getInventario); 
 router.get('/api/movimiento', controller.getMovimiento); // Query Params
-router.get('/api/liquidacion/:numLiquidacion', controller.getLiquidacion); // Path Param
+router.get('/api/liquidacion', controller.getLiquidacion); // Path Param
 router.get('/api/ventas', controller.getVentas); // Query Params
 
 module.exports = router;

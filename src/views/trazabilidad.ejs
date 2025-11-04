@@ -1,6 +1,6 @@
 <div class="row mb-4">
     <div class="col-12">
-        <h1 class="text-center">🔍 Concepto de Trazabilidad de Inventario (TRZ)</h1>
+        <h1 class="text-center">🔍 Trazabilidad de Lotes</h1>
         <p class="lead text-center">Implementación Paso 1: Formulario de Búsqueda y Selección de Inventario.</p>
     </div>
 </div>
@@ -47,7 +47,7 @@
     <div class="col-12 mb-4">
         <div class="card shadow">
             <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">Tabla 1: Inventario/Stock (dbo.TRZ_p1)</h5>
+                <h5 class="mb-0">Tabla 1: Inventario/Stock</h5>
                 <small>Haga click en una fila para iniciar el rastreo.</small>
             </div>
             <div class="card-body">
@@ -55,13 +55,20 @@
             </div>
         </div>
     </div>
-    
-    <div id="other-tables-container" style="display:none;">
-        <div id="movimiento-table"></div>
-        <div id="liquidacion-table"></div>
-        <div id="ventas-table"></div>
-    </div>
 </div>
+
+<!-- CONTENEDOR DE RASTREO (OCULTO INICIALMENTE) -->
+<div id="tracing-results-container" style="display: none;">
+    <!-- TABLA 2 (MOVIMIENTO) -->
+    <%- include('movimientos.ejs') %>
+
+    <!-- TABLA 3 (LIQUIDACIÓN) -->
+    <%- include('liquidacion.ejs') %>
+
+    <!-- TABLA 4 (VENTAS) -->
+    <%- include('ventas.ejs') %>
+</div>
+
 
 <div class="modal fade" id="selectionModal" tabindex="-1" aria-labelledby="selectionModalLabel" aria-hidden="true">
   <div class="modal-dialog">
@@ -72,12 +79,14 @@
       </div>
       <div class="modal-body">
         <p>Ha seleccionado el siguiente artículo para iniciar la trazabilidad:</p>
+        <p><strong>Descripción:</strong> <span id="modal-descripcion"></span></p>
+<p><strong>Fabricante:</strong> <span id="modal-fabricante"></span></p>
         <strong>Serie/Lote:</strong> <span id="modal-serie-lote"></span><br>
         <strong>Código:</strong> <span id="modal-codigo"></span>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-        <button type="button" class="btn btn-success" id="confirm-selection">Iniciar Rastreo (T2/T4)</button>
+        <button type="button" class="btn btn-success" id="confirm-selection">Iniciar Rastreo</button>
       </div>
     </div>
   </div>
